@@ -29,7 +29,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"pokemonb2w/internal/control"
 	"pokemonb2w/internal/middleware"
 
@@ -37,14 +36,15 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
+	"github.com/spf13/viper"
 )
 
 const (
-	uiPath          = "./static/"
-	swaggerPrefix   = "/swagger/"
-	portEnvVariable = "PORT"
-	standardPort    = "8080"
+	standardPort = "8080"
+
+	viperConfigFileName = "config"
+	viperConfigFileType = "yml"
+	viperConfigPath     = "./internal/"
 
 	apiPath = "/v1/api"
 )
@@ -78,21 +78,35 @@ func setUpAPIMiddlewares(apiRouter *mux.Router) {
 }
 
 // Loads env variables for local development
-func loadEnv() {
-	// TODO: Use VIPER to load config vars instead of env vars.
-	// This STILL NEEDS TO BE CALLED IN DEVELOPMENT. Use env var "env" to
-	// decide to load env vars or not.
-	log.Println("Loading environment variables for local development")
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("No .env file found.")
+func loadConfig() {
+	viper.SetConfigName(viperConfigFileName)
+	viper.SetConfigType(viperConfigFileType)
+	viper.AddConfigPath(viperConfigPath)
+
+	err := viper.ReadInConfig()
+
+	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		log.Println("Config file not found.")
+	} else if err != nil {
+		log.Fatal("Couldn't read config file:", err.Error())
 	}
+
+	viper.AllowEmptyEnv(true)
+	viper.AutomaticEnv()
+}
+
+func serveSwagger() {
+	uiPath := viper.GetString("app.swagger.uiPath")
+	fs := http.FileServer(http.Dir(uiPath))
+
+	swaggerPrefix := viper.GetString("app.swagger.prefix")
+	router.PathPrefix(swaggerPrefix).Handler(http.StripPrefix(swaggerPrefix, fs))
 }
 
 // APP's entrypoint
 func main() {
-	// Load env variables in development env
-	loadEnv()
+	// Load config variables
+	loadConfig()
 
 	apiRouter := getAPIRouter()
 
@@ -104,19 +118,15 @@ func main() {
 	setUpAPIMiddlewares(apiRouter)
 
 	// Serve Swagger UI
-	fs := http.FileServer(http.Dir(uiPath))
-	router.PathPrefix(swaggerPrefix).Handler(http.StripPrefix(swaggerPrefix, fs))
+	serveSwagger()
 
 	// $PORT is defined in the server
-	var port string
-	port, found := os.LookupEnv(portEnvVariable)
-
-	if !found || port == "" {
+	port := viper.Get("port")
+	if port == nil || port == "" {
 		port = standardPort
 	}
 
 	log.Printf("Listening on localhost:%s", port)
-
 	log.Fatal(
 		http.ListenAndServe(
 			fmt.Sprintf(":%s", port),

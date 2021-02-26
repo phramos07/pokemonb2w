@@ -1,0 +1,11 @@
+app:
+  name: pokemonb2w
+  description: RESTful API in golang as part of assessment for hiring process at B2W.
+  version: v1
+  apiPath: /v1/api
+  swagger:
+    uiPath: ./static/
+    prefix: /swagger/
+  api:
+    pageSize: 10
+  

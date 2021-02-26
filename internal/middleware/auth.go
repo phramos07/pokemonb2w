@@ -3,16 +3,17 @@ package middleware
 import (
 	"log"
 	"net/http"
-	"os"
+
+	"github.com/spf13/viper"
 )
 
 const (
 	authHeader = "Authorization"
-	authEnvVar = "AUTHORIZATION"
+	authEnvVar = "API_KEY"
 )
 
 func auth(token string) bool {
-	authToken := os.Getenv(authEnvVar)
+	authToken := viper.Get(authEnvVar)
 
 	return authToken == token
 }
