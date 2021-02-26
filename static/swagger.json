@@ -1,0 +1,61 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "OpenAPI doc for the B2W coding challenge.",
+    "title": "B2W coding challenge API.",
+    "contact": {
+      "name": "Supun Muthutantri",
+      "email": "fakemail@gmail.com"
+    },
+    "version": "1.0.0"
+  },
+  "basePath": "/v1/api",
+  "paths": {
+    "/health": {
+      "get": {
+        "description": "If the API is online, an OK will be returned.",
+        "tags": [
+          "health"
+        ],
+        "summary": "Health check. Return API health status.",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Health check report. API is (apparently) OK.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "500": {
+            "description": "Health check report. Something is wrong.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "APIKey": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "APIKey": []
+    }
+  ]
+}
