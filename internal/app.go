@@ -38,9 +38,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-
-	// Indirect imports
-	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
