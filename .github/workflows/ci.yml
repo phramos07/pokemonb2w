@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - master
+      - devel
+
+jobs:
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run Linter
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.29
+
+  swagger:
+    name: Swagger Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set-up Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16.0'
+
+      - name: Install go-swagger
+        run: go get -u github.com/go-swagger/go-swagger/cmd/swagger
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Generate Swagger Specs
+        run: make swagger.gen
+      
+      - name: Validate Swagger Specs
+        run: make swagger.validate
+
+  test:
+    name: Test
+    needs: lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set-up Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16.0'
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Unit Tests
+        run: make test
+
+  deploy:
+    name: Build & Deploy
+    needs: [test, swagger]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Invoke Build & Deploy Workflow
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Build & Deploy
+          token: ${{ secrets.PAT }}
+      

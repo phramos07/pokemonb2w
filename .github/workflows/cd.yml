@@ -1,0 +1,40 @@
+name: Build & Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set-up Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16.0'
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: make build
+
+  deploy:
+    name: Deploy to Heroku
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+    
+      # - name: Deploy to Heroku
+      #   uses: akhileshns/heroku-deploy@v3.11.10 # This is the action
+      #   with:
+      #     heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+      #     heroku_app_name: ${{secrets.HEROKU_APP_NAME}} #Must be unique in Heroku
+      #     heroku_email: ${{secrets.HEROKU_EMAIL}}
+      #     usedocker: true
+      #   env:
+      #     HD_AUTHORIZATION: ${{secrets.AUTHORIZATION}}
