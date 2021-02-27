@@ -45,8 +45,6 @@ const (
 	viperConfigFileName = "config"
 	viperConfigFileType = "yml"
 	viperConfigPath     = "./internal/"
-
-	apiPath = "/v1/api"
 )
 
 // Base router. Will be used for swaggerUI server
@@ -55,12 +53,16 @@ var router *mux.Router = mux.NewRouter()
 // API Router. Will be used for the API endpoints and all the middlewares
 // of logging, in-memory db and auth.
 func getAPIRouter() *mux.Router {
-	apiRouter := router.PathPrefix(apiPath).Subrouter()
+	apiRouter := router.PathPrefix(
+		viper.GetString("app.api.path"),
+	).Subrouter()
+
 	return apiRouter
 }
 
 // Sets up routes in the API router
 func setUpRoutes(apiRouter *mux.Router) {
+	control.AddAppInfoRoute(apiRouter)
 	control.AddHealthRoutes(apiRouter)
 }
 
@@ -88,7 +90,10 @@ func loadConfig() {
 	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 		log.Println("Config file not found.")
 	} else if err != nil {
-		log.Fatal("Couldn't read config file:", err.Error())
+		log.Fatal(
+			"Couldn't read config file:",
+			err.Error(),
+		)
 	}
 
 	viper.AllowEmptyEnv(true)
@@ -100,7 +105,9 @@ func serveSwagger() {
 	fs := http.FileServer(http.Dir(uiPath))
 
 	swaggerPrefix := viper.GetString("app.swagger.prefix")
-	router.PathPrefix(swaggerPrefix).Handler(http.StripPrefix(swaggerPrefix, fs))
+	router.PathPrefix(swaggerPrefix).Handler(
+		http.StripPrefix(swaggerPrefix, fs),
+	)
 }
 
 // APP's entrypoint

@@ -1,5 +1,6 @@
 package control
 
 const (
-	healthPath = "/health"
+	healthPath  = "/health"
+	apiInfoPath = "/app-info"
 )

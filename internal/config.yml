@@ -1,11 +1,14 @@
 app:
   name: pokemonb2w
   description: RESTful API in golang as part of assessment for hiring process at B2W.
-  version: v1
-  apiPath: /v1/api
   swagger:
     uiPath: ./static/
     prefix: /swagger/
   api:
+    version: v1
+    path: /v1/api
     pageSize: 10
-  
+  deploy:
+    herokuAppNameVar: HEROKU_APP_NAME
+    herokuBuildVar: HEROKU_RELEASE_VERSION
+    herokuCreatedAtVar: HEROKU_RELEASE_CREATED_AT

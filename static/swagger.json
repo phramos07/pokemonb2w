@@ -21,6 +21,21 @@
   },
   "basePath": "/v1/api",
   "paths": {
+    "/app-info": {
+      "get": {
+        "description": "JSON with app info will be returned.",
+        "tags": [
+          "appinfo"
+        ],
+        "summary": "Retrieves APP info.",
+        "operationId": "getAppInfo",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/appinfoResponse"
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "description": "If the API is online, an OK will be returned.",
@@ -43,6 +58,44 @@
             }
           }
         }
+      }
+    }
+  },
+  "definitions": {
+    "appinfo": {
+      "type": "object",
+      "title": "AppInfo model.",
+      "required": [
+        "name",
+        "release",
+        "releasedAt"
+      ],
+      "properties": {
+        "name": {
+          "description": "App name.",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "release": {
+          "description": "App version.",
+          "type": "string",
+          "x-go-name": "ReleaseNumber"
+        },
+        "releasedAt": {
+          "description": "App release date.",
+          "type": "string",
+          "x-go-name": "ReleasedAt"
+        }
+      },
+      "x-go-name": "AppInfo",
+      "x-go-package": "pokemonb2w/internal/model"
+    }
+  },
+  "responses": {
+    "appinfoResponse": {
+      "description": "An AppInfoResponse response model\n\nThis is used for returning a response the App's info.",
+      "schema": {
+        "$ref": "#/definitions/appinfo"
       }
     }
   },
