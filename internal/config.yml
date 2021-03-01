@@ -12,3 +12,5 @@ app:
     herokuAppNameVar: HEROKU_APP_NAME
     herokuBuildVar: HEROKU_RELEASE_VERSION
     herokuCreatedAtVar: HEROKU_RELEASE_CREATED_AT
+  pokeApi:
+    basePath: https://pokeapi.co/api/v2

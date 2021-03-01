@@ -30,6 +30,7 @@ package main
 import (
 	"fmt"
 	"pokemonb2w/internal/control"
+	"pokemonb2w/internal/facade"
 	"pokemonb2w/internal/middleware"
 
 	"log"
@@ -64,6 +65,7 @@ func getAPIRouter() *mux.Router {
 func setUpRoutes(apiRouter *mux.Router) {
 	control.AddAppInfoRoute(apiRouter)
 	control.AddHealthRoutes(apiRouter)
+	control.AddPokemonRoutes(apiRouter)
 }
 
 // Sets up middlewares in the API router
@@ -110,6 +112,10 @@ func serveSwagger() {
 	)
 }
 
+func startServices() {
+	facade.StartPokeAPIService()
+}
+
 // APP's entrypoint
 func main() {
 	// Load config variables
@@ -126,6 +132,9 @@ func main() {
 
 	// Serve Swagger UI
 	serveSwagger()
+
+	// Start services
+	startServices()
 
 	// $PORT is defined in the server
 	port := viper.Get("port")
