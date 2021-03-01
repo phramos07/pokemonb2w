@@ -59,9 +59,133 @@
           }
         }
       }
+    },
+    "/pokemon/{id}": {
+      "get": {
+        "description": "Retrieves details about a pokemon by its id.",
+        "tags": [
+          "pokemon"
+        ],
+        "summary": "Retrieves a pokemon by id.",
+        "operationId": "getPokemon",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "ID",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/pokemonResponse"
+          },
+          "204": {
+            "description": "No pokemon found.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
+    "Pokemon": {
+      "type": "object",
+      "title": "Pokemon it's a model that describes a Pokemon.",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "baseStats": {
+          "$ref": "#/definitions/PokemonBaseStats"
+        },
+        "evolutionChains": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "x-go-name": "EvolutionChains"
+        },
+        "height": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Height"
+        },
+        "image": {
+          "type": "string",
+          "x-go-name": "Image"
+        },
+        "locationAreaEncounters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "LocationAreaEncounters"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Types"
+        },
+        "weight": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Weight"
+        }
+      },
+      "x-go-package": "pokemonb2w/internal/model"
+    },
+    "PokemonBaseStats": {
+      "type": "object",
+      "title": "PokemonBaseStats is a model that describes a Pokemon's base stats.",
+      "properties": {
+        "attack": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Attack"
+        },
+        "defense": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Defense"
+        },
+        "hp": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "HP"
+        },
+        "special-attack": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "SpecialAttack"
+        },
+        "special-defense": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "SpecialDefense"
+        },
+        "speed": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Speed"
+        }
+      },
+      "x-go-package": "pokemonb2w/internal/model"
+    },
     "appinfo": {
       "type": "object",
       "title": "AppInfo model.",
@@ -96,6 +220,12 @@
       "description": "An AppInfoResponse response model\n\nThis is used for returning a response the App's info.",
       "schema": {
         "$ref": "#/definitions/appinfo"
+      }
+    },
+    "pokemonResponse": {
+      "description": "PokemonResponse response model\n\nThis is used for returning a response with a pokemon inside the body",
+      "schema": {
+        "$ref": "#/definitions/Pokemon"
       }
     }
   },

@@ -2,15 +2,15 @@ package model
 
 // Pokemon it's a model that describes a Pokemon.
 type Pokemon struct {
-	ID                     int              `json:"ID"`
-	Name                   string           `json:"name"`
-	Image                  string           `json:"image"`
-	Types                  []string         `json:"types"`
-	LocationAreaEncounters []string         `json:"locationAreaEncounters"`
-	EvolutionChains        [][]string       `json:"evolutionChains"`
-	Weight                 int              `json:"weight"`
-	Height                 int              `json:"height"`
-	BaseStats              PokemonBaseStats `json:"baseStats"`
+	ID                     int               `json:"id"`
+	Name                   string            `json:"name"`
+	Image                  string            `json:"image"`
+	Types                  []string          `json:"types"`
+	LocationAreaEncounters []string          `json:"locationAreaEncounters"`
+	EvolutionChains        [][]string        `json:"evolutionChains"`
+	Weight                 int               `json:"weight"`
+	Height                 int               `json:"height"`
+	BaseStats              *PokemonBaseStats `json:"baseStats"`
 }
 
 // PokemonBaseStats is a model that describes a Pokemon's base stats.
@@ -121,14 +121,14 @@ type PokeAPIPokemonResponse struct {
 				SwordShield struct {
 					FrontDefault string `json:"front_default"`
 				} `json:"sword-shield"`
-			} `json:"generation-vii"`
+			} `json:"generation-viii"`
 		} `json:"versions"`
 	} `json:"sprites"`
 }
 
 // PokeAPIChain describes a recursive evolution chain in a PokeAPI evolution-chain response
 type PokeAPIChain struct {
-	EvolvesTo *PokeAPIChain `json:"evolves_to"`
+	EvolvesTo []PokeAPIChain `json:"evolves_to"`
 
 	Species struct {
 		Name string `json:"name"`
