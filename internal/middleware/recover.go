@@ -18,23 +18,28 @@ func recoverInternal(w http.ResponseWriter) {
 	r := recover()
 	statusCode := http.StatusInternalServerError
 	if r != nil {
+		log.Println("Recovering from Panic:", r)
 		switch t := r.(type) {
 		case string:
 			err = errors.New(t)
 		case model.CustomError:
 			err = t
 			switch t.ErrorType() {
-			case model.ErrorDefault:
-				statusCode = http.StatusInternalServerError
 			case model.ErrorUnprocessableJSON:
 				statusCode = http.StatusUnprocessableEntity
+			case model.ErrorNotFound:
+				statusCode = http.StatusNotFound
+			case model.ErrorBadRequest:
+				statusCode = http.StatusBadRequest
+			case model.ErrorDefault:
+				statusCode = http.StatusInternalServerError
 			}
 		case error:
 			err = t
 		default:
 			err = errors.New(unknownErrorStr)
 		}
-		log.Printf("Recovered from panic: %s\n", err.Error())
+		log.Printf("Successfuly recovered from panic: %s\n", err.Error())
 		http.Error(w, err.Error(), statusCode)
 	}
 }

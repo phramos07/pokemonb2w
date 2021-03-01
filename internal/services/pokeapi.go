@@ -25,7 +25,7 @@ const (
 
 // PokeAPIRequester is responsible for sending requests to the PokeAPI and retrieving data
 type PokeAPIRequester interface {
-	ListPokemon(offset int) *model.PokeAPIListPokemonsResponse
+	ListPokemon(offset int, limit int) *model.PokeAPIListPokemonsResponse
 	GetPokemon(id int) *model.PokeAPIPokemonResponse
 
 	GetPokemonByURL(url string) *model.PokeAPIPokemonResponse
@@ -56,17 +56,20 @@ func NewPokeAPIRequester() PokeAPIRequester {
 	}
 }
 
-func (p *pokeAPIService) ListPokemon(offset int) *model.PokeAPIListPokemonsResponse {
+func (p *pokeAPIService) ListPokemon(offset int, limit int) *model.PokeAPIListPokemonsResponse {
 	var response model.PokeAPIListPokemonsResponse
 
 	// Build request query
 	listPokemonURL := fmt.Sprintf("%s%s", p.basePath, pokeAPIListPokemonPath)
+	listPokemonURL = strings.TrimRight(listPokemonURL, "/")
 	req, err := http.NewRequest(http.MethodGet, listPokemonURL, nil)
 	if err != nil {
 		log.Panic("Couldn't create request to the PokeAPI.", err.Error())
 	}
 	q := req.URL.Query()
 	q.Add("offset", strconv.Itoa(offset))
+	q.Add("limit", strconv.Itoa(limit))
+
 	req.URL.RawQuery = q.Encode()
 
 	// Perform request
@@ -85,6 +88,7 @@ func (p *pokeAPIService) GetPokemon(id int) *model.PokeAPIPokemonResponse {
 
 func (p *pokeAPIService) GetPokemonByURL(url string) *model.PokeAPIPokemonResponse {
 	var response model.PokeAPIPokemonResponse
+	url = strings.TrimRight(url, "/")
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -99,6 +103,7 @@ func (p *pokeAPIService) GetPokemonByURL(url string) *model.PokeAPIPokemonRespon
 
 func (p *pokeAPIService) GetAreaEncountersByURL(url string) *model.PokeAPILocationAreaEncountersResponse {
 	var response model.PokeAPILocationAreaEncountersResponse
+	url = strings.TrimRight(url, "/")
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -113,6 +118,7 @@ func (p *pokeAPIService) GetAreaEncountersByURL(url string) *model.PokeAPILocati
 
 func (p *pokeAPIService) GetEvolutionChainsByURL(url string) *model.PokeAPIEvoChainsResponse {
 	var response model.PokeAPIEvoChainsResponse
+	url = strings.TrimRight(url, "/")
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -127,6 +133,7 @@ func (p *pokeAPIService) GetEvolutionChainsByURL(url string) *model.PokeAPIEvoCh
 
 func (p *pokeAPIService) GetPokemonSpeciesByURL(url string) *model.PokeAPIPokemonSpeciesResponse {
 	var response model.PokeAPIPokemonSpeciesResponse
+	url = strings.TrimRight(url, "/")
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -146,6 +153,11 @@ func (p *pokeAPIService) performRequest(req *http.Request, obj interface{}) {
 		log.Panic("Couldn't perform request to the PokeAPI", err.Error())
 	}
 	defer res.Body.Close()
+
+	switch res.StatusCode {
+	case http.StatusNotFound:
+		panic(model.NewrequestError("Resource not found.", model.ErrorNotFound))
+	}
 
 	// Read response body
 	body, err := ioutil.ReadAll(res.Body)

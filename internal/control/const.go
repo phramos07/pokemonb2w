@@ -5,4 +5,8 @@ const (
 	apiInfoPath = "/app-info"
 
 	pokemonByIDPath = "/pokemon/{id}"
+	pokemonPath     = "/pokemon"
+
+	defaultListOffset = 0
+	defaultListLimit  = 20
 )

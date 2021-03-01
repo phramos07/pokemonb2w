@@ -60,6 +60,42 @@
         }
       }
     },
+    "/pokemon": {
+      "get": {
+        "description": "Retrieves details about all pokemon.",
+        "tags": [
+          "pokemon"
+        ],
+        "summary": "Retrieves all pokemon",
+        "operationId": "listPokemon",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Offset",
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Limit",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/listPokemonResponse"
+          },
+          "204": {
+            "description": "No pokemons found.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/pokemon/{id}": {
       "get": {
         "description": "Retrieves details about a pokemon by its id.",
@@ -187,6 +223,45 @@
       },
       "x-go-package": "pokemonb2w/internal/model"
     },
+    "PokemonList": {
+      "description": "PokemonList is a model that describes a list of Pokemon obtained from the list pokemon request",
+      "type": "object",
+      "properties": {
+        "_results": {
+          "$ref": "#/definitions/PokemonListResults"
+        },
+        "pokemons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Pokemon"
+          },
+          "x-go-name": "Pokemons"
+        }
+      },
+      "x-go-package": "pokemonb2w/internal/model"
+    },
+    "PokemonListResults": {
+      "description": "PokemonListResults is a model that describes metadata from list pokemon request",
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Limit"
+        },
+        "offset": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Offset"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Total"
+        }
+      },
+      "x-go-package": "pokemonb2w/internal/model"
+    },
     "appinfo": {
       "type": "object",
       "title": "AppInfo model.",
@@ -221,6 +296,12 @@
       "description": "An AppInfoResponse response model\n\nThis is used for returning a response the App's info.",
       "schema": {
         "$ref": "#/definitions/appinfo"
+      }
+    },
+    "listPokemonResponse": {
+      "description": "ListPokemonResponse response model\n\nThis is used for returning a response with a list of pokemons inside the body.",
+      "schema": {
+        "$ref": "#/definitions/PokemonList"
       }
     },
     "pokemonResponse": {

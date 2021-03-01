@@ -14,20 +14,50 @@ func StartPokeAPIService() {
 	}
 }
 
+// ListPokemon lists all pokemon from the PokeAPI
+func ListPokemon(offset int, limit int) *model.PokemonList {
+	pokemonsRes := pokeAPIService.ListPokemon(offset, limit)
+
+	var pokemonList *model.PokemonList = &model.PokemonList{
+		Results: &model.PokemonListResults{
+			Limit:  limit,
+			Offset: offset,
+			Total:  pokemonsRes.Count,
+		},
+		Pokemons: make([]*model.Pokemon, 0),
+	}
+
+	for _, p := range pokemonsRes.Results {
+		pokemonRes := pokeAPIService.GetPokemonByURL(p.URL)
+		detailedPkm := &model.Pokemon{
+			ID:    pokemonRes.ID,
+			Name:  pokemonRes.Name,
+			Image: retrieveImage(pokemonRes),
+			Types: retrieveTypes(pokemonRes),
+		}
+		pokemonList.Pokemons = append(pokemonList.Pokemons, detailedPkm)
+	}
+
+	return pokemonList
+}
+
 // GetPokemon ...
 func GetPokemon(id int) *model.Pokemon {
 	pokemonPokeAPIResponse := pokeAPIService.GetPokemon(id)
+	var pokemon *model.Pokemon
 
-	pokemon := &model.Pokemon{
-		ID:                     pokemonPokeAPIResponse.ID,
-		Name:                   pokemonPokeAPIResponse.Name,
-		Weight:                 pokemonPokeAPIResponse.Weight,
-		Height:                 pokemonPokeAPIResponse.Height,
-		Types:                  retrieveTypes(pokemonPokeAPIResponse),
-		LocationAreaEncounters: retrieveLocationAreas(pokemonPokeAPIResponse),
-		EvolutionChains:        retrieveEvoChains(pokemonPokeAPIResponse),
-		Image:                  retrieveImage(pokemonPokeAPIResponse),
-		BaseStats:              retrieveBaseStats(pokemonPokeAPIResponse),
+	if pokemonPokeAPIResponse != nil {
+		pokemon = &model.Pokemon{
+			ID:                     pokemonPokeAPIResponse.ID,
+			Name:                   pokemonPokeAPIResponse.Name,
+			Weight:                 pokemonPokeAPIResponse.Weight,
+			Height:                 pokemonPokeAPIResponse.Height,
+			Types:                  retrieveTypes(pokemonPokeAPIResponse),
+			LocationAreaEncounters: retrieveLocationAreas(pokemonPokeAPIResponse),
+			EvolutionChains:        retrieveEvoChains(pokemonPokeAPIResponse),
+			Image:                  retrieveImage(pokemonPokeAPIResponse),
+			BaseStats:              retrieveBaseStats(pokemonPokeAPIResponse),
+		}
 	}
 
 	return pokemon
@@ -165,7 +195,7 @@ func retrieveImage(response *model.PokeAPIPokemonResponse) string {
 		return image
 	}
 
-	return "no_image_retrieved"
+	return ""
 }
 
 func retrieveBaseStats(response *model.PokeAPIPokemonResponse) *model.PokemonBaseStats {

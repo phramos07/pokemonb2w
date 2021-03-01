@@ -5,6 +5,7 @@ const (
 	ErrorDefault           = "DEFAULT_ERROR_TYPE"
 	ErrorUnprocessableJSON = "UNPROCESSABLE_JSON_ERROR_TYPE"
 	ErrorBadRequest        = "BAD_REQUEST_ERROR_TYPE"
+	ErrorNotFound          = "NOT_FOUND_ERROR_TYPE"
 )
 
 // CustomError Interface
@@ -32,6 +33,6 @@ func (r *requestError) Error() string {
 	return r.errStr
 }
 
-func (r *requestError) StatusCode() string {
+func (r *requestError) ErrorType() string {
 	return r.errType
 }
