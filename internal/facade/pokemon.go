@@ -77,9 +77,7 @@ func fillEvoChainsRec(allPaths *[][]string, current *[]string, chain model.PokeA
 	*current = append(*current, chain.Species.Name)
 	for _, v := range chain.EvolvesTo {
 		var newPath []string
-		for _, p := range *current {
-			newPath = append(newPath, p)
-		}
+		newPath = append(newPath, *current...)
 		allPaths = fillEvoChainsRec(allPaths, &newPath, v)
 	}
 

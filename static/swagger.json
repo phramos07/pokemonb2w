@@ -97,10 +97,6 @@
       "type": "object",
       "title": "Pokemon it's a model that describes a Pokemon.",
       "properties": {
-        "ID": {
-          "type": "integer",
-          "format": "int64"
-        },
         "baseStats": {
           "$ref": "#/definitions/PokemonBaseStats"
         },
@@ -118,6 +114,11 @@
           "type": "integer",
           "format": "int64",
           "x-go-name": "Height"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
         },
         "image": {
           "type": "string",
