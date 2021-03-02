@@ -81,6 +81,12 @@
             "x-go-name": "Limit",
             "name": "limit",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Fields",
+            "name": "fields",
+            "in": "query"
           }
         ],
         "responses": {
@@ -112,6 +118,12 @@
             "name": "id",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Fields",
+            "name": "fields",
+            "in": "query"
           }
         ],
         "responses": {

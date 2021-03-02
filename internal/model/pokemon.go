@@ -2,10 +2,10 @@ package model
 
 // Pokemon it's a model that describes a Pokemon.
 type Pokemon struct {
-	ID                     int               `json:"id"`
-	Name                   string            `json:"name"`
-	Image                  string            `json:"image"`
-	Types                  []string          `json:"types"`
+	ID                     int               `json:"id,omitempty"`
+	Name                   string            `json:"name,omitempty"`
+	Image                  string            `json:"image,omitempty"`
+	Types                  []string          `json:"types,omitempty"`
 	LocationAreaEncounters []string          `json:"locationAreaEncounters,omitempty"`
 	EvolutionChains        [][]string        `json:"evolutionChains,omitempty"`
 	Weight                 int               `json:"weight,omitempty"`

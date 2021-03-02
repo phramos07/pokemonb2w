@@ -7,6 +7,7 @@ import (
 	"pokemonb2w/internal/facade"
 	"pokemonb2w/internal/model"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -42,6 +43,9 @@ type ListPokemonParams struct {
 
 	// in: query
 	Limit int `json:"limit"`
+
+	// in: query
+	Fields string `json:"fields"`
 }
 
 // GetPokemonParams params for retrieving pokemon by ID.
@@ -53,6 +57,9 @@ type GetPokemonParams struct {
 	// in: path
 	// required: true
 	ID int `json:"id"`
+
+	// in: query
+	Fields string `json:"fields"`
 }
 
 // swagger:operation GET /pokemon/{id} pokemon getPokemon
@@ -73,7 +80,16 @@ func getPokemon(w http.ResponseWriter, r *http.Request) {
 		log.Panic(model.NewrequestError("Bad ID param type.", model.ErrorBadRequest))
 	}
 
-	pokemon := facade.GetPokemon(pokeID)
+	fields := r.FormValue(fieldsQueryParam)
+
+	var fieldsArr []string
+	if fields != "" {
+		fieldsArr = strings.Split(fields, fieldsSeparator)
+	} else {
+		fieldsArr = make([]string, 0)
+	}
+
+	pokemon := facade.GetPokemon(pokeID, fieldsArr)
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(pokemon)
 	if err != nil {
@@ -93,8 +109,16 @@ func getPokemon(w http.ResponseWriter, r *http.Request) {
 //     schema:
 //       type: string
 func listPokemon(w http.ResponseWriter, r *http.Request) {
-	offset := r.FormValue("offset")
-	limit := r.FormValue("limit")
+	offset := r.FormValue(offsetQueryParam)
+	limit := r.FormValue(limitQueryParam)
+	fields := r.FormValue(fieldsQueryParam)
+
+	var fieldsArr []string
+	if fields != "" {
+		fieldsArr = strings.Split(fields, fieldsSeparator)
+	} else {
+		fieldsArr = make([]string, 0)
+	}
 
 	var offsetInt int
 	var limitInt int
@@ -118,7 +142,7 @@ func listPokemon(w http.ResponseWriter, r *http.Request) {
 		limitInt = defaultListLimit
 	}
 
-	pokemons := facade.ListPokemon(offsetInt, limitInt)
+	pokemons := facade.ListPokemon(offsetInt, limitInt, fieldsArr)
 
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(pokemons)

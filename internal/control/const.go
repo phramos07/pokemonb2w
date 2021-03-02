@@ -9,4 +9,10 @@ const (
 
 	defaultListOffset = 0
 	defaultListLimit  = 20
+
+	offsetQueryParam = "offset"
+	limitQueryParam  = "limit"
+	fieldsQueryParam = "fields"
+
+	fieldsSeparator = ","
 )
