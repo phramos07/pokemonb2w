@@ -3,6 +3,7 @@ package facade
 import (
 	"pokemonb2w/internal/model"
 	"pokemonb2w/internal/services"
+	"sync"
 )
 
 var pokeAPIService services.PokeAPIRequester
@@ -27,10 +28,27 @@ func ListPokemon(offset int, limit int, fields []string) *model.PokemonList {
 		Pokemons: make([]*model.Pokemon, 0),
 	}
 
+	// Perform all pokemon GET's in parallel
+	var wg sync.WaitGroup
+	pokemonChannel := make(chan *model.Pokemon, len(pokemonsRes.Results))
 	for _, p := range pokemonsRes.Results {
-		pokemonRes := pokeAPIService.GetPokemonByURL(p.URL)
-		detailedPkm := mountPokemon(pokemonRes, fields)
-		pokemonList.Pokemons = append(pokemonList.Pokemons, detailedPkm)
+		wg.Add(1)
+		go func(wg *sync.WaitGroup, url string) {
+			defer wg.Done()
+
+			pokemonRes := pokeAPIService.GetPokemonByURL(url)
+			detailedPkm := mountPokemon(pokemonRes, fields)
+
+			pokemonChannel <- detailedPkm
+		}(&wg, p.URL)
+
+	}
+
+	wg.Wait()
+	close(pokemonChannel)
+
+	for p := range pokemonChannel {
+		pokemonList.Pokemons = append(pokemonList.Pokemons, p)
 	}
 
 	return pokemonList
