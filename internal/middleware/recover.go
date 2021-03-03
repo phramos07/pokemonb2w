@@ -44,7 +44,7 @@ func recoverInternal(w http.ResponseWriter) {
 	}
 }
 
-// RecoverMiddleware ...
+// RecoverMiddleware handles panic during requests.
 func RecoverMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer recoverInternal(w)

@@ -6,18 +6,28 @@ import (
 	"sync"
 )
 
-var pokeAPIService services.PokeAPIRequester
+// PokemonRequester will be exposed to the controller to work on pokemon requests
+type PokemonRequester interface {
+	ListPokemon(offset int, limit int, fields []string) *model.PokemonList
+	GetPokemon(id int, fields []string) *model.Pokemon
+}
 
-// StartPokeAPIService starts singleton for pokeAPI service
-func StartPokeAPIService() {
-	if pokeAPIService == nil {
-		pokeAPIService = services.NewPokeAPIRequester()
+type pokemonFacade struct {
+	PokemonRequester
+
+	pokeAPIService services.PokeAPIRequester
+}
+
+// NewPokemonFacade returns a new PokemonRequester object.
+func NewPokemonFacade() PokemonRequester {
+	return &pokemonFacade{
+		pokeAPIService: services.NewPokeAPIRequester(),
 	}
 }
 
 // ListPokemon lists all pokemon from the PokeAPI
-func ListPokemon(offset int, limit int, fields []string) *model.PokemonList {
-	pokemonsRes := pokeAPIService.ListPokemon(offset, limit)
+func (p *pokemonFacade) ListPokemon(offset int, limit int, fields []string) *model.PokemonList {
+	pokemonsRes := p.pokeAPIService.ListPokemon(offset, limit)
 
 	var pokemonList *model.PokemonList = &model.PokemonList{
 		Results: &model.PokemonListResults{
@@ -31,16 +41,16 @@ func ListPokemon(offset int, limit int, fields []string) *model.PokemonList {
 	// Perform all pokemon GET's in parallel
 	var wg sync.WaitGroup
 	pokemonChannel := make(chan *model.Pokemon, len(pokemonsRes.Results))
-	for _, p := range pokemonsRes.Results {
+	for _, pkm := range pokemonsRes.Results {
 		wg.Add(1)
 		go func(wg *sync.WaitGroup, url string) {
 			defer wg.Done()
 
-			pokemonRes := pokeAPIService.GetPokemonByURL(url)
-			detailedPkm := mountPokemon(pokemonRes, fields)
+			pokemonRes := p.pokeAPIService.GetPokemonByURL(url)
+			detailedPkm := p.mountPokemon(pokemonRes, fields)
 
 			pokemonChannel <- detailedPkm
-		}(&wg, p.URL)
+		}(&wg, pkm.URL)
 
 	}
 
@@ -54,19 +64,19 @@ func ListPokemon(offset int, limit int, fields []string) *model.PokemonList {
 	return pokemonList
 }
 
-// GetPokemon ...
-func GetPokemon(id int, fields []string) *model.Pokemon {
-	pokemonPokeAPIResponse := pokeAPIService.GetPokemon(id)
+// GetPokemon retrieves a pokemon by its ID.
+func (p *pokemonFacade) GetPokemon(id int, fields []string) *model.Pokemon {
+	pokemonPokeAPIResponse := p.pokeAPIService.GetPokemon(id)
 	var pokemon *model.Pokemon
 
 	if pokemonPokeAPIResponse != nil {
-		pokemon = mountPokemon(pokemonPokeAPIResponse, fields)
+		pokemon = p.mountPokemon(pokemonPokeAPIResponse, fields)
 	}
 
 	return pokemon
 }
 
-func mountPokemon(pokemonPokeAPIResponse *model.PokeAPIPokemonResponse, fields []string) *model.Pokemon {
+func (p *pokemonFacade) mountPokemon(pokemonPokeAPIResponse *model.PokeAPIPokemonResponse, fields []string) *model.Pokemon {
 	var pokemon *model.Pokemon
 
 	empty := (len(fields) == 0)
@@ -79,11 +89,11 @@ func mountPokemon(pokemonPokeAPIResponse *model.PokeAPIPokemonResponse, fields [
 			pokemon.Name = pokemonPokeAPIResponse.Name
 			pokemon.Weight = pokemonPokeAPIResponse.Weight
 			pokemon.Height = pokemonPokeAPIResponse.Height
-			pokemon.Types = retrieveTypes(pokemonPokeAPIResponse)
-			pokemon.LocationAreaEncounters = retrieveLocationAreas(pokemonPokeAPIResponse)
-			pokemon.EvolutionChains = retrieveEvoChains(pokemonPokeAPIResponse)
-			pokemon.Image = retrieveImage(pokemonPokeAPIResponse)
-			pokemon.BaseStats = retrieveBaseStats(pokemonPokeAPIResponse)
+			pokemon.Types = p.retrieveTypes(pokemonPokeAPIResponse)
+			pokemon.LocationAreaEncounters = p.retrieveLocationAreas(pokemonPokeAPIResponse)
+			pokemon.EvolutionChains = p.retrieveEvoChains(pokemonPokeAPIResponse)
+			pokemon.Image = p.retrieveImage(pokemonPokeAPIResponse)
+			pokemon.BaseStats = p.retrieveBaseStats(pokemonPokeAPIResponse)
 		} else {
 			for _, field := range fields {
 				if field == idFieldName {
@@ -95,15 +105,15 @@ func mountPokemon(pokemonPokeAPIResponse *model.PokeAPIPokemonResponse, fields [
 				} else if field == heightFieldName {
 					pokemon.Height = pokemonPokeAPIResponse.Height
 				} else if field == typesFieldName {
-					pokemon.Types = retrieveTypes(pokemonPokeAPIResponse)
+					pokemon.Types = p.retrieveTypes(pokemonPokeAPIResponse)
 				} else if field == locationAreaEncountersFieldName {
-					pokemon.LocationAreaEncounters = retrieveLocationAreas(pokemonPokeAPIResponse)
+					pokemon.LocationAreaEncounters = p.retrieveLocationAreas(pokemonPokeAPIResponse)
 				} else if field == evolutionChainsFieldName {
-					pokemon.EvolutionChains = retrieveEvoChains(pokemonPokeAPIResponse)
+					pokemon.EvolutionChains = p.retrieveEvoChains(pokemonPokeAPIResponse)
 				} else if field == imageFieldName {
-					pokemon.Image = retrieveImage(pokemonPokeAPIResponse)
+					pokemon.Image = p.retrieveImage(pokemonPokeAPIResponse)
 				} else if field == baseStatsFieldName {
-					pokemon.BaseStats = retrieveBaseStats(pokemonPokeAPIResponse)
+					pokemon.BaseStats = p.retrieveBaseStats(pokemonPokeAPIResponse)
 				}
 			}
 		}
@@ -112,7 +122,7 @@ func mountPokemon(pokemonPokeAPIResponse *model.PokeAPIPokemonResponse, fields [
 	return pokemon
 }
 
-func retrieveTypes(response *model.PokeAPIPokemonResponse) []string {
+func (p *pokemonFacade) retrieveTypes(response *model.PokeAPIPokemonResponse) []string {
 	var types []string
 
 	for _, v := range response.Types {
@@ -122,10 +132,10 @@ func retrieveTypes(response *model.PokeAPIPokemonResponse) []string {
 	return types
 }
 
-func retrieveLocationAreas(response *model.PokeAPIPokemonResponse) []string {
+func (p *pokemonFacade) retrieveLocationAreas(response *model.PokeAPIPokemonResponse) []string {
 	var locations []string
 
-	locationAreaRes := pokeAPIService.GetAreaEncountersByURL(response.LocationAreaEncountersURL)
+	locationAreaRes := p.pokeAPIService.GetAreaEncountersByURL(response.LocationAreaEncountersURL)
 	for _, v := range locationAreaRes.Locations {
 		locations = append(locations, v.LocationArea.Name)
 	}
@@ -133,19 +143,19 @@ func retrieveLocationAreas(response *model.PokeAPIPokemonResponse) []string {
 	return locations
 }
 
-func retrieveEvoChains(response *model.PokeAPIPokemonResponse) [][]string {
+func (p *pokemonFacade) retrieveEvoChains(response *model.PokeAPIPokemonResponse) [][]string {
 	evoChains := make([][]string, 0)
 
-	speciesRes := pokeAPIService.GetPokemonSpeciesByURL(response.Species.URL)
-	evoChainsRes := pokeAPIService.GetEvolutionChainsByURL(speciesRes.EvolutionChain.URL)
+	speciesRes := p.pokeAPIService.GetPokemonSpeciesByURL(response.Species.URL)
+	evoChainsRes := p.pokeAPIService.GetEvolutionChainsByURL(speciesRes.EvolutionChain.URL)
 
 	startingChain := make([]string, 0)
-	evoChains = *fillEvoChainsRec(&evoChains, &startingChain, evoChainsRes.Chain)
+	evoChains = *p.fillEvoChainsRec(&evoChains, &startingChain, evoChainsRes.Chain)
 
 	return evoChains
 }
 
-func fillEvoChainsRec(allPaths *[][]string, current *[]string, chain model.PokeAPIChain) *[][]string {
+func (p *pokemonFacade) fillEvoChainsRec(allPaths *[][]string, current *[]string, chain model.PokeAPIChain) *[][]string {
 	if len(chain.EvolvesTo) == 0 {
 		*current = append(*current, chain.Species.Name)
 		*allPaths = append(*allPaths, *current)
@@ -157,13 +167,13 @@ func fillEvoChainsRec(allPaths *[][]string, current *[]string, chain model.PokeA
 	for _, v := range chain.EvolvesTo {
 		var newPath []string
 		newPath = append(newPath, *current...)
-		allPaths = fillEvoChainsRec(allPaths, &newPath, v)
+		allPaths = p.fillEvoChainsRec(allPaths, &newPath, v)
 	}
 
 	return allPaths
 }
 
-func retrieveImage(response *model.PokeAPIPokemonResponse) string {
+func (p *pokemonFacade) retrieveImage(response *model.PokeAPIPokemonResponse) string {
 	image := response.Sprites.Versions.GenerationVIII.SwordShield.FrontDefault
 	if image != "" {
 		return image
@@ -247,7 +257,7 @@ func retrieveImage(response *model.PokeAPIPokemonResponse) string {
 	return ""
 }
 
-func retrieveBaseStats(response *model.PokeAPIPokemonResponse) *model.PokemonBaseStats {
+func (p *pokemonFacade) retrieveBaseStats(response *model.PokeAPIPokemonResponse) *model.PokemonBaseStats {
 	var baseStats model.PokemonBaseStats
 
 	for _, v := range response.Stats {

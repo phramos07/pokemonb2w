@@ -24,8 +24,7 @@ func getHealth(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "OK")
 }
 
-// AddHealthRoutes ...
-// Adds routes from path Health to the main API router
+// AddHealthRoutes adds routes from path Health to the main API router
 func AddHealthRoutes(r *mux.Router) {
 	r.HandleFunc(healthPath, getHealth).Methods(http.MethodGet, http.MethodOptions)
 }

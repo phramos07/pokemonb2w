@@ -30,5 +30,5 @@ var corsm *cors.Cors = cors.New(
 		},
 	})
 
-// CorsMiddleware ...
+// CorsMiddleware controls all accepted headers when the API is being called from different domains
 var CorsMiddleware = corsm.Handler
