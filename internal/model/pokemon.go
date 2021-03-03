@@ -2,15 +2,15 @@ package model
 
 // Pokemon it's a model that describes a Pokemon.
 type Pokemon struct {
-	ID                     int               `json:"id"`
-	Name                   string            `json:"name"`
-	Image                  string            `json:"image"`
-	Types                  []string          `json:"types"`
-	LocationAreaEncounters []string          `json:"locationAreaEncounters"`
-	EvolutionChains        [][]string        `json:"evolutionChains"`
-	Weight                 int               `json:"weight"`
-	Height                 int               `json:"height"`
-	BaseStats              *PokemonBaseStats `json:"baseStats"`
+	ID                     int               `json:"id,omitempty"`
+	Name                   string            `json:"name,omitempty"`
+	Image                  string            `json:"image,omitempty"`
+	Types                  []string          `json:"types,omitempty"`
+	LocationAreaEncounters []string          `json:"locationAreaEncounters,omitempty"`
+	EvolutionChains        [][]string        `json:"evolutionChains,omitempty"`
+	Weight                 int               `json:"weight,omitempty"`
+	Height                 int               `json:"height,omitempty"`
+	BaseStats              *PokemonBaseStats `json:"baseStats,omitempty"`
 }
 
 // PokemonBaseStats is a model that describes a Pokemon's base stats.
@@ -21,6 +21,19 @@ type PokemonBaseStats struct {
 	Defense        int `json:"defense"`
 	SpecialAttack  int `json:"special-attack"`
 	SpecialDefense int `json:"special-defense"`
+}
+
+// PokemonList is a model that describes a list of Pokemon obtained from the list pokemon request
+type PokemonList struct {
+	Pokemons []*Pokemon          `json:"pokemons"`
+	Results  *PokemonListResults `json:"_results"`
+}
+
+// PokemonListResults is a model that describes metadata from list pokemon request
+type PokemonListResults struct {
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
+	Total  int `json:"total"`
 }
 
 // PokeAPIPokemonResponse describes the response obtained from PokeAPI for a Pokemon
@@ -151,6 +164,8 @@ type PokeAPILocationAreaEncountersResponse struct {
 
 // PokeAPIListPokemonsResponse describes a response from PokeAPI pokemon list request
 type PokeAPIListPokemonsResponse struct {
+	Count int `json:"count"`
+
 	Results []struct {
 		Name string `json:"name"`
 		URL  string `json:"url"` // URL to retrieve details from that Pokemon

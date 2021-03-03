@@ -3,6 +3,7 @@ package facade
 import (
 	"pokemonb2w/internal/model"
 	"pokemonb2w/internal/services"
+	"sync"
 )
 
 var pokeAPIService services.PokeAPIRequester
@@ -14,20 +15,98 @@ func StartPokeAPIService() {
 	}
 }
 
-// GetPokemon ...
-func GetPokemon(id int) *model.Pokemon {
-	pokemonPokeAPIResponse := pokeAPIService.GetPokemon(id)
+// ListPokemon lists all pokemon from the PokeAPI
+func ListPokemon(offset int, limit int, fields []string) *model.PokemonList {
+	pokemonsRes := pokeAPIService.ListPokemon(offset, limit)
 
-	pokemon := &model.Pokemon{
-		ID:                     pokemonPokeAPIResponse.ID,
-		Name:                   pokemonPokeAPIResponse.Name,
-		Weight:                 pokemonPokeAPIResponse.Weight,
-		Height:                 pokemonPokeAPIResponse.Height,
-		Types:                  retrieveTypes(pokemonPokeAPIResponse),
-		LocationAreaEncounters: retrieveLocationAreas(pokemonPokeAPIResponse),
-		EvolutionChains:        retrieveEvoChains(pokemonPokeAPIResponse),
-		Image:                  retrieveImage(pokemonPokeAPIResponse),
-		BaseStats:              retrieveBaseStats(pokemonPokeAPIResponse),
+	var pokemonList *model.PokemonList = &model.PokemonList{
+		Results: &model.PokemonListResults{
+			Limit:  limit,
+			Offset: offset,
+			Total:  pokemonsRes.Count,
+		},
+		Pokemons: make([]*model.Pokemon, 0),
+	}
+
+	// Perform all pokemon GET's in parallel
+	var wg sync.WaitGroup
+	pokemonChannel := make(chan *model.Pokemon, len(pokemonsRes.Results))
+	for _, p := range pokemonsRes.Results {
+		wg.Add(1)
+		go func(wg *sync.WaitGroup, url string) {
+			defer wg.Done()
+
+			pokemonRes := pokeAPIService.GetPokemonByURL(url)
+			detailedPkm := mountPokemon(pokemonRes, fields)
+
+			pokemonChannel <- detailedPkm
+		}(&wg, p.URL)
+
+	}
+
+	wg.Wait()
+	close(pokemonChannel)
+
+	for p := range pokemonChannel {
+		pokemonList.Pokemons = append(pokemonList.Pokemons, p)
+	}
+
+	return pokemonList
+}
+
+// GetPokemon ...
+func GetPokemon(id int, fields []string) *model.Pokemon {
+	pokemonPokeAPIResponse := pokeAPIService.GetPokemon(id)
+	var pokemon *model.Pokemon
+
+	if pokemonPokeAPIResponse != nil {
+		pokemon = mountPokemon(pokemonPokeAPIResponse, fields)
+	}
+
+	return pokemon
+}
+
+func mountPokemon(pokemonPokeAPIResponse *model.PokeAPIPokemonResponse, fields []string) *model.Pokemon {
+	var pokemon *model.Pokemon
+
+	empty := (len(fields) == 0)
+
+	if pokemonPokeAPIResponse != nil {
+		pokemon = &model.Pokemon{}
+
+		if empty {
+			pokemon.ID = pokemonPokeAPIResponse.ID
+			pokemon.Name = pokemonPokeAPIResponse.Name
+			pokemon.Weight = pokemonPokeAPIResponse.Weight
+			pokemon.Height = pokemonPokeAPIResponse.Height
+			pokemon.Types = retrieveTypes(pokemonPokeAPIResponse)
+			pokemon.LocationAreaEncounters = retrieveLocationAreas(pokemonPokeAPIResponse)
+			pokemon.EvolutionChains = retrieveEvoChains(pokemonPokeAPIResponse)
+			pokemon.Image = retrieveImage(pokemonPokeAPIResponse)
+			pokemon.BaseStats = retrieveBaseStats(pokemonPokeAPIResponse)
+		} else {
+			for _, field := range fields {
+				if field == idFieldName {
+					pokemon.ID = pokemonPokeAPIResponse.ID
+				} else if field == nameFieldName {
+					pokemon.Name = pokemonPokeAPIResponse.Name
+				} else if field == weightFieldName {
+					pokemon.Weight = pokemonPokeAPIResponse.Weight
+				} else if field == heightFieldName {
+					pokemon.Height = pokemonPokeAPIResponse.Height
+				} else if field == typesFieldName {
+					pokemon.Types = retrieveTypes(pokemonPokeAPIResponse)
+				} else if field == locationAreaEncountersFieldName {
+					pokemon.LocationAreaEncounters = retrieveLocationAreas(pokemonPokeAPIResponse)
+				} else if field == evolutionChainsFieldName {
+					pokemon.EvolutionChains = retrieveEvoChains(pokemonPokeAPIResponse)
+				} else if field == imageFieldName {
+					pokemon.Image = retrieveImage(pokemonPokeAPIResponse)
+				} else if field == baseStatsFieldName {
+					pokemon.BaseStats = retrieveBaseStats(pokemonPokeAPIResponse)
+				}
+			}
+		}
 	}
 
 	return pokemon
@@ -165,7 +244,7 @@ func retrieveImage(response *model.PokeAPIPokemonResponse) string {
 		return image
 	}
 
-	return "no_image_retrieved"
+	return ""
 }
 
 func retrieveBaseStats(response *model.PokeAPIPokemonResponse) *model.PokemonBaseStats {

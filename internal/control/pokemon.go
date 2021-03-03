@@ -7,6 +7,7 @@ import (
 	"pokemonb2w/internal/facade"
 	"pokemonb2w/internal/model"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -18,7 +19,33 @@ import (
 // swagger:response pokemonResponse
 type PokemonResponse struct {
 	// in: body
-	Pokemon *model.Pokemon `json:"pokemon"`
+	Pokemon *model.Pokemon `json:"body"`
+}
+
+// ListPokemonResponse response model
+//
+// This is used for returning a response with a list of pokemons inside the body.
+//
+// swagger:response listPokemonResponse
+type ListPokemonResponse struct {
+	// in: body
+	Pokemons *model.PokemonList `json:"body"`
+}
+
+// ListPokemonParams params for listing pokemons.
+//
+// This is used for listing pokemons.
+//
+// swagger:parameters listPokemon
+type ListPokemonParams struct {
+	// in: query
+	Offset string `json:"offset"`
+
+	// in: query
+	Limit int `json:"limit"`
+
+	// in: query
+	Fields string `json:"fields"`
 }
 
 // GetPokemonParams params for retrieving pokemon by ID.
@@ -30,6 +57,9 @@ type GetPokemonParams struct {
 	// in: path
 	// required: true
 	ID int `json:"id"`
+
+	// in: query
+	Fields string `json:"fields"`
 }
 
 // swagger:operation GET /pokemon/{id} pokemon getPokemon
@@ -50,9 +80,72 @@ func getPokemon(w http.ResponseWriter, r *http.Request) {
 		log.Panic(model.NewrequestError("Bad ID param type.", model.ErrorBadRequest))
 	}
 
-	pokemon := facade.GetPokemon(pokeID)
+	fields := r.FormValue(fieldsQueryParam)
+
+	var fieldsArr []string
+	if fields != "" {
+		fieldsArr = strings.Split(fields, fieldsSeparator)
+	} else {
+		fieldsArr = make([]string, 0)
+	}
+
+	pokemon := facade.GetPokemon(pokeID, fieldsArr)
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(pokemon)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// swagger:operation GET /pokemon pokemon listPokemon
+// ---
+// summary: Retrieves all pokemon
+// description: Retrieves details about all pokemon.
+// responses:
+//   '200':
+//     "$ref": "#/responses/listPokemonResponse"
+//   '204':
+//     description: No pokemons found.
+//     schema:
+//       type: string
+func listPokemon(w http.ResponseWriter, r *http.Request) {
+	offset := r.FormValue(offsetQueryParam)
+	limit := r.FormValue(limitQueryParam)
+	fields := r.FormValue(fieldsQueryParam)
+
+	var fieldsArr []string
+	if fields != "" {
+		fieldsArr = strings.Split(fields, fieldsSeparator)
+	} else {
+		fieldsArr = make([]string, 0)
+	}
+
+	var offsetInt int
+	var limitInt int
+	var err error
+
+	if offset != "" {
+		offsetInt, err = strconv.Atoi(offset)
+		if err != nil {
+			panic(model.NewrequestError("Bad Offset param.", model.ErrorBadRequest))
+		}
+	} else {
+		offsetInt = defaultListOffset
+	}
+
+	if limit != "" {
+		limitInt, err = strconv.Atoi(limit)
+		if err != nil {
+			panic(model.NewrequestError("Bad Limit param.", model.ErrorBadRequest))
+		}
+	} else {
+		limitInt = defaultListLimit
+	}
+
+	pokemons := facade.ListPokemon(offsetInt, limitInt, fieldsArr)
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(pokemons)
 	if err != nil {
 		panic(err)
 	}
@@ -61,4 +154,6 @@ func getPokemon(w http.ResponseWriter, r *http.Request) {
 // AddPokemonRoutes Adds all routes from pokemon controller to the router.
 func AddPokemonRoutes(r *mux.Router) {
 	r.HandleFunc(pokemonByIDPath, getPokemon).Methods(http.MethodGet, http.MethodOptions)
+	r.HandleFunc(pokemonPath, listPokemon).Methods(http.MethodGet, http.MethodOptions)
+
 }
