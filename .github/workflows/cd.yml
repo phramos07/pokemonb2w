@@ -29,12 +29,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
     
-      # - name: Deploy to Heroku
-      #   uses: akhileshns/heroku-deploy@v3.11.10 # This is the action
-      #   with:
-      #     heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-      #     heroku_app_name: ${{secrets.HEROKU_APP_NAME}} #Must be unique in Heroku
-      #     heroku_email: ${{secrets.HEROKU_EMAIL}}
-      #     usedocker: true
-      #   env:
-      #     HD_AUTHORIZATION: ${{secrets.AUTHORIZATION}}
+      - name: Deploy to Heroku
+        uses: akhileshns/heroku-deploy@v3.11.10 # This is the action
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: ${{secrets.HEROKU_APP_NAME}} #Must be unique in Heroku
+          heroku_email: ${{secrets.HEROKU_EMAIL}}
+          usedocker: true
+        env:
+          HD_API_KEY: ${{secrets.API_KEY}}
