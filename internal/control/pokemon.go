@@ -12,6 +12,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var pokemonFacade facade.PokemonRequester
+
+func InitPokemonController() {
+	if pokemonFacade == nil {
+		pokemonFacade = facade.NewPokemonFacade()
+	}
+}
+
 // PokemonResponse response model
 //
 // This is used for returning a response with a pokemon inside the body
@@ -89,7 +97,7 @@ func getPokemon(w http.ResponseWriter, r *http.Request) {
 		fieldsArr = make([]string, 0)
 	}
 
-	pokemon := facade.GetPokemon(pokeID, fieldsArr)
+	pokemon := pokemonFacade.GetPokemon(pokeID, fieldsArr)
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(pokemon)
 	if err != nil {
@@ -142,7 +150,7 @@ func listPokemon(w http.ResponseWriter, r *http.Request) {
 		limitInt = defaultListLimit
 	}
 
-	pokemons := facade.ListPokemon(offsetInt, limitInt, fieldsArr)
+	pokemons := pokemonFacade.ListPokemon(offsetInt, limitInt, fieldsArr)
 
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(pokemons)

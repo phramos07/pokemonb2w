@@ -30,7 +30,6 @@ package main
 import (
 	"fmt"
 	"pokemonb2w/internal/control"
-	"pokemonb2w/internal/facade"
 	"pokemonb2w/internal/middleware"
 
 	"log"
@@ -112,8 +111,8 @@ func serveSwagger() {
 	)
 }
 
-func startServices() {
-	facade.StartPokeAPIService()
+func startControllers() {
+	control.InitPokemonController()
 }
 
 // APP's entrypoint
@@ -133,8 +132,8 @@ func main() {
 	// Serve Swagger UI
 	serveSwagger()
 
-	// Start services
-	startServices()
+	// Initialize controllers
+	startControllers()
 
 	// $PORT is defined in the server
 	port := viper.Get("port")
