@@ -23,7 +23,7 @@ func auth(token string) bool {
 	return true
 }
 
-// AuthorizationMiddleware ...
+// AuthorizationMiddleware controls every request made by performing a single check on Authorization header
 func AuthorizationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get(authHeader)

@@ -64,7 +64,7 @@ func (p *pokemonFacade) ListPokemon(offset int, limit int, fields []string) *mod
 	return pokemonList
 }
 
-// GetPokemon ...
+// GetPokemon retrieves a pokemon by its ID.
 func (p *pokemonFacade) GetPokemon(id int, fields []string) *model.Pokemon {
 	pokemonPokeAPIResponse := p.pokeAPIService.GetPokemon(id)
 	var pokemon *model.Pokemon

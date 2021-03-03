@@ -45,8 +45,7 @@ func getAppInfo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// AddAppInfoRoute ...
-// Adds routes from path Health to the main API router
+// AddAppInfoRoute adds routes from path app-info to the main API router
 func AddAppInfoRoute(r *mux.Router) {
 	r.HandleFunc(apiInfoPath, getAppInfo).Methods(http.MethodGet, http.MethodOptions)
 }
