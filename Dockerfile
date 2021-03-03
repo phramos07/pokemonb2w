@@ -35,6 +35,9 @@ COPY --from=build_base /tmp/pokemonb2w/bin/pokemonb2w /app/pokemonb2w
 # Copy swagger static files
 COPY --from=build_base /tmp/pokemonb2w/static /static
 
+# Copy config file
+COPY --from=build_base /tmp/pokemonb2w/config.yml .
+
 # Run the binary program produced by `build phase`
 CMD /app/pokemonb2w
 

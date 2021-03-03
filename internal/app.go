@@ -45,7 +45,7 @@ const (
 
 	viperConfigFileName = "config"
 	viperConfigFileType = "yml"
-	viperConfigPath     = "./internal/"
+	viperConfigPath     = "."
 )
 
 // Base router. Will be used for swaggerUI server

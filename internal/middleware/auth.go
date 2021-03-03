@@ -15,7 +15,12 @@ const (
 func auth(token string) bool {
 	authToken := viper.Get(authEnvVar)
 
-	return authToken == token
+	if authToken != nil {
+		return authToken == token
+	}
+	log.Println("Warning: no api-key set in env vars")
+
+	return true
 }
 
 // AuthorizationMiddleware ...
