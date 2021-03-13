@@ -79,8 +79,9 @@ func (p *pokemonFacade) GetPokemon(id int, fields []string) *model.Pokemon {
 func (p *pokemonFacade) mountPokemon(pokemonPokeAPIResponse *model.PokeAPIPokemonResponse, fields []string) *model.Pokemon {
 	var pokemon *model.Pokemon
 
-	empty := (len(fields) == 0)
+	var wg sync.WaitGroup
 
+	empty := (len(fields) == 0)
 	if pokemonPokeAPIResponse != nil {
 		pokemon = &model.Pokemon{}
 
@@ -89,11 +90,33 @@ func (p *pokemonFacade) mountPokemon(pokemonPokeAPIResponse *model.PokeAPIPokemo
 			pokemon.Name = pokemonPokeAPIResponse.Name
 			pokemon.Weight = pokemonPokeAPIResponse.Weight
 			pokemon.Height = pokemonPokeAPIResponse.Height
-			pokemon.Types = p.retrieveTypes(pokemonPokeAPIResponse)
-			pokemon.LocationAreaEncounters = p.retrieveLocationAreas(pokemonPokeAPIResponse)
-			pokemon.EvolutionChains = p.retrieveEvoChains(pokemonPokeAPIResponse)
-			pokemon.Image = p.retrieveImage(pokemonPokeAPIResponse)
-			pokemon.BaseStats = p.retrieveBaseStats(pokemonPokeAPIResponse)
+
+			wg.Add(5)
+
+			go func() {
+				defer wg.Done()
+				pokemon.Types = p.retrieveTypes(pokemonPokeAPIResponse)
+			}()
+
+			go func() {
+				defer wg.Done()
+				pokemon.LocationAreaEncounters = p.retrieveLocationAreas(pokemonPokeAPIResponse)
+			}()
+
+			go func() {
+				defer wg.Done()
+				pokemon.EvolutionChains = p.retrieveEvoChains(pokemonPokeAPIResponse)
+			}()
+
+			go func() {
+				defer wg.Done()
+				pokemon.Image = p.retrieveImage(pokemonPokeAPIResponse)
+			}()
+
+			go func() {
+				defer wg.Done()
+				pokemon.BaseStats = p.retrieveBaseStats(pokemonPokeAPIResponse)
+			}()
 		} else {
 			for _, field := range fields {
 				if field == idFieldName {
@@ -105,20 +128,41 @@ func (p *pokemonFacade) mountPokemon(pokemonPokeAPIResponse *model.PokeAPIPokemo
 				} else if field == heightFieldName {
 					pokemon.Height = pokemonPokeAPIResponse.Height
 				} else if field == typesFieldName {
-					pokemon.Types = p.retrieveTypes(pokemonPokeAPIResponse)
+					wg.Add(1)
+					go func() {
+						defer wg.Done()
+						pokemon.Types = p.retrieveTypes(pokemonPokeAPIResponse)
+					}()
 				} else if field == locationAreaEncountersFieldName {
-					pokemon.LocationAreaEncounters = p.retrieveLocationAreas(pokemonPokeAPIResponse)
+					wg.Add(1)
+					go func() {
+						defer wg.Done()
+						pokemon.LocationAreaEncounters = p.retrieveLocationAreas(pokemonPokeAPIResponse)
+					}()
 				} else if field == evolutionChainsFieldName {
-					pokemon.EvolutionChains = p.retrieveEvoChains(pokemonPokeAPIResponse)
+					wg.Add(1)
+					go func() {
+						defer wg.Done()
+						pokemon.EvolutionChains = p.retrieveEvoChains(pokemonPokeAPIResponse)
+					}()
 				} else if field == imageFieldName {
-					pokemon.Image = p.retrieveImage(pokemonPokeAPIResponse)
+					wg.Add(1)
+					go func() {
+						defer wg.Done()
+						pokemon.Image = p.retrieveImage(pokemonPokeAPIResponse)
+					}()
 				} else if field == baseStatsFieldName {
-					pokemon.BaseStats = p.retrieveBaseStats(pokemonPokeAPIResponse)
+					wg.Add(1)
+					go func() {
+						defer wg.Done()
+						pokemon.BaseStats = p.retrieveBaseStats(pokemonPokeAPIResponse)
+					}()
 				}
 			}
 		}
 	}
 
+	wg.Wait()
 	return pokemon
 }
 
