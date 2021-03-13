@@ -3,6 +3,7 @@ package facade
 import (
 	"pokemonb2w/internal/model"
 	"pokemonb2w/internal/services"
+	"sort"
 	"sync"
 )
 
@@ -60,6 +61,10 @@ func (p *pokemonFacade) ListPokemon(offset int, limit int, fields []string) *mod
 	for p := range pokemonChannel {
 		pokemonList.Pokemons = append(pokemonList.Pokemons, p)
 	}
+
+	sort.Slice(pokemonList.Pokemons, func(i, j int) bool {
+		return pokemonList.Pokemons[i].ID < pokemonList.Pokemons[j].ID
+	})
 
 	return pokemonList
 }
